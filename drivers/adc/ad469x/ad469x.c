@@ -214,15 +214,42 @@ int32_t ad469x_set_interface_mode(struct ad469x_dev *dev,
 	return ret;
 }
 
-/**
- * Set the power consumption mode of the ADC core.
- * @param dev - The device structure.
- * @param mode - The power mode.
- * 					Accepted values: AD77681_ECO
- *									 AD77681_MEDIAN
- *									 AD77681_FAST
- * @return 0 in case of success, negative error code otherwise.
- */
+int32_t ad469x_set_channel_sequence(struct ad469x_dev *dev,
+	       enum ad469x_channel_sequencing seq)
+{
+	int32_t ret;
+	switch (seq)
+	{
+	case AD469x_single_cycle:
+		ret = ad469x_spi_write_mask(dev,
+				AD469x_REG_SEQ_CTRL,
+				0xC0,
+				0x00);
+
+		ret = ad469x_spi_write_mask(dev,
+				AD469x_REG_SETUP,
+				0x20,
+				0x00);
+
+		break;
+
+	case AD469x_two_cycle:
+		break;
+
+	case AD469x_standard_seq:
+		break;
+
+	case AD469x_advanced_seq:
+		break;
+
+	default:
+		break;
+	}
+
+
+	return ret;
+}
+
 int32_t ad469x_set_busy(struct ad469x_dev *dev,
 			       enum ad469x_busy_gp_sel gp_sel)
 {
@@ -300,8 +327,9 @@ int32_t ad469x_init(struct ad469x_dev **device,
 	ad469x_spi_reg_read(dev, AD469x_REG_SCRATCH_PAD, &data);
 
 	ad469x_set_busy(dev, AD469x_busy_gp0);
-
+	ad469x_set_channel_sequence(dev, AD469x_single_cycle);
 	ad469x_set_interface_mode(dev, AD469x_IF_CONVERSION_MODE);
+
 	spi_engine_set_transfer_width(dev->spi_desc, spi_eng_init_param->data_width);
 	spi_engine_set_speed(dev->spi_desc, dev->spi_desc->max_speed_hz);
 

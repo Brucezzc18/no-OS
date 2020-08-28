@@ -40,9 +40,9 @@ int main()
 	uint32_t adc_data;
 	struct spi_engine_offload_message msg;
 //	uint32_t commands_data[] = {AD469x_CMD_SEL_TEMP_SNSOR_CH << 8};
-	uint32_t commands_data[] = {AD469x_CMD_CONFIG_CH_SEL(0) << 8};
+	uint32_t commands_data[1];
 	int32_t ret, data;
-	uint32_t i;
+	uint32_t i, j = 0;
 //	main_sergiu();
 
 	struct spi_engine_offload_init_param spi_engine_offload_init_param = {
@@ -101,10 +101,10 @@ int main()
 	if (ret < 0)
 		return ret;
 
-	uint32_t period;
-	axi_io_read(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, &period);
-	axi_io_write(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, period * 2);
-	axi_io_read(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, &period);
+//	uint32_t period;
+//	axi_io_read(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, &period);
+//	axi_io_write(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, period * 2);
+//	axi_io_read(AXI_PWMGEN_BASEADDR, AXI_PWMGEN_REG_PULSE_PERIOD, &period);
 	axi_io_write(SPI_TRIGGER_BASEADDR, AXI_PWMGEN_REG_CONFIG, BIT(1));
 
 	ret = spi_engine_offload_init(dev->spi_desc, &spi_engine_offload_init_param);
@@ -116,6 +116,12 @@ int main()
 	msg.rx_addr = 0x800000;
 	msg.tx_addr = 0xA000000;
 	msg.commands_data = commands_data;
+while (1) {
+	if (j % 2)
+		commands_data[0] = AD469x_CMD_CONFIG_CH_SEL(0) << 8;
+	else
+		commands_data[0] = AD469x_CMD_CONFIG_CH_SEL(1) << 8;
+	j++;
 
 	ret = spi_engine_offload_transfer(dev->spi_desc, msg, AD469x_EVB_SAMPLE_NO);
 	if (ret != SUCCESS)
@@ -132,7 +138,7 @@ int main()
 		printf("ADC%d: %d \n", i, data);
 		offload_data += 1;
 	}
-
+}
 	print("Success\n\r");
 
 	Xil_DCacheDisable();
